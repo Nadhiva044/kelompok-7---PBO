@@ -1,0 +1,88 @@
+import pygame
+import random
+import math
+
+pygame.init()
+
+# Dimensi layar
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Star Catcher")
+
+# Warna
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+YELLOW = (255, 255, 0)
+BLUE = (0, 128, 255)
+PINK = (255, 105, 180)
+RED = (255, 0, 0)
+
+# Pengaturan frame
+clock = pygame.time.Clock()
+FPS = 60
+
+# Konstanta game
+PLAYER_RADIUS = 20
+STAR_RADIUS = 15
+FLOWER_SIZE = 40
+SPEED = 5
+INVINCIBILITY_TIME = 60
+
+# Gambar latar belakang
+background_image = pygame.image.load("saat game.png")
+background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+
+opening_screen_background = pygame.image.load("background game.png")
+opening_screen_background = pygame.transform.scale(opening_screen_background, (WIDTH, HEIGHT))
+
+game_over_background = pygame.image.load("background game.png")
+game_over_background = pygame.transform.scale(game_over_background, (WIDTH, HEIGHT))
+
+# Kelas Induk untuk GameObject
+class GameObject:
+    def _init_(self, x, y, color):
+        self.x = x
+        self.y = y
+        self.color = color
+
+    def draw(self, screen):
+        raise NotImplementedError("Subclasses must implement this method")
+
+# Kelas Player mewarisi GameObject
+class Player(GameObject):
+    def _init_(self):
+        super()._init_(WIDTH // 2, HEIGHT // 2, BLUE)
+        self.radius = PLAYER_RADIUS
+        self.score = 0
+        self.lives = 3
+        self.invincibility_time = 0
+        self.flash_time = 0
+
+    def move(self, keys):
+        if self.invincibility_time > 0:
+            self.invincibility_time -= 1
+
+        if keys[pygame.K_UP] and self.y - self.radius > 0:
+            self.y -= SPEED
+        if keys[pygame.K_DOWN] and self.y + self.radius < HEIGHT:
+            self.y += SPEED
+        if keys[pygame.K_LEFT] and self.x - self.radius > 0:
+            self.x -= SPEED
+        if keys[pygame.K_RIGHT] and self.x + self.radius < WIDTH:
+            self.x += SPEED
+
+    def draw(self, screen):
+        if self.invincibility_time > 0:
+            self.flash_time += 1
+            color = (255, 0, 255) if self.flash_time % 10 < 5 else self.color
+        else:
+            color = self.color
+        pygame.draw.circle(screen, color, (self.x, self.y), self.radius)
+
+# Kelas Star mewarisi GameObject
+class Star(GameObject):
+    def _init_(self):
+        x = random.randint(STAR_RADIUS, WIDTH - STAR_RADIUS)
+        y = random.randint(STAR_RADIUS, HEIGHT - STAR_RADIUS)
+        super()._init_(x, y, YELLOW)
+        self.radius = STAR_RADIUS
