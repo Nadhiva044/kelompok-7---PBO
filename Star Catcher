@@ -176,3 +176,92 @@ class Game:
 
         try_again_font = pygame.font.SysFont("Georgia", 40)
         try_again_text = try_again_font.render("CLICK TO START", True, WHITE)
+
+        game_over_rect = game_over_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+        final_score_rect = final_score_text.get_rect(center=(WIDTH // 2, HEIGHT // 3 + 80))
+        try_again_rect = try_again_text.get_rect(center=(WIDTH // 2, HEIGHT // 3 + 160))
+
+        screen.blit(game_over_text, game_over_rect)
+        screen.blit(final_score_text, final_score_rect)
+        screen.blit(try_again_text, try_again_rect)
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        if self.game_over and pygame.mouse.get_pressed()[0]:
+            self.start_game()
+
+        if not self.game_started:
+            return
+
+        self.player.move(keys)
+
+        for flower in self.flowers:
+            flower.move()
+
+        for star in self.stars[:]:
+            if (
+                (self.player.x - star.x) ** 2 + (self.player.y - star.y) ** 2
+                <= (self.player.radius + star.radius) ** 2
+            ):
+                self.stars.remove(star)
+                self.stars.append(Star())
+                self.player.score += 1
+
+        for flower in self.flowers:
+            if (
+                (self.player.x - flower.x) ** 2 + (self.player.y - flower.y) ** 2
+                <= (self.player.radius + flower.size // 2) ** 2
+            ):
+                if self.player.invincibility_time == 0:
+                    self.player.lives -= 1
+                    self.player.invincibility_time = INVINCIBILITY_TIME
+                    if self.player.lives <= 0:
+                        self.game_over = True
+
+    def draw(self):
+        if self.on_opening_screen:
+            self.opening_screen()
+        elif self.on_click_to_start_screen:
+            self.click_to_start_screen()
+        elif self.game_over:
+            self.game_over_screen()
+        else:
+            screen.blit(background_image, (0, 0))
+            self.player.draw(screen)
+
+            for star in self.stars:
+                star.draw(screen)
+
+            for flower in self.flowers:
+                flower.draw(screen)
+
+            font = pygame.font.SysFont("Georgia", 24)
+            score_text = font.render(f"Score: {self.player.score}", True, BLACK)
+            lives_text = font.render(f"Lives: {self.player.lives}", True, BLACK)
+
+            screen.blit(score_text, (10, 10))
+            screen.blit(lives_text, (10, 40))
+
+    def run(self):
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.on_opening_screen:
+                        self.on_opening_screen = False
+                        self.on_click_to_start_screen = True
+                    elif self.on_click_to_start_screen:
+                        self.start_game()
+                    elif self.game_over:
+                        self.start_game()
+
+            self.update()
+            self.draw()
+            pygame.display.update()
+            clock.tick(FPS)
+
+        pygame.quit()
+
+game = Game()
+game.run()
