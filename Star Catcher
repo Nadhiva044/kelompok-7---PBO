@@ -86,3 +86,93 @@ class Star(GameObject):
         y = random.randint(STAR_RADIUS, HEIGHT - STAR_RADIUS)
         super()._init_(x, y, YELLOW)
         self.radius = STAR_RADIUS
+
+def draw(self, screen):
+        pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)
+
+# Kelas Flower mewarisi GameObject
+class Flower(GameObject):
+    def _init_(self):
+        x = random.randint(FLOWER_SIZE, WIDTH - FLOWER_SIZE)
+        y = random.randint(FLOWER_SIZE, HEIGHT - FLOWER_SIZE)
+        super()._init_(x, y, PINK)
+        self.size = FLOWER_SIZE
+        self.speed_x = random.choice([-3, -2, 2, 3])
+        self.speed_y = random.choice([-3, -2, 2, 3])
+
+    def move(self):
+        self.x += self.speed_x
+        self.y += self.speed_y
+
+        if self.x - self.size // 2 < 0 or self.x + self.size // 2 > WIDTH:
+            self.speed_x *= -1
+        if self.y - self.size // 2 < 0 or self.y + self.size // 2 > HEIGHT:
+            self.speed_y *= -1
+
+    def draw(self, screen):
+        points = []
+        for i in range(8):
+            angle = i * (math.pi / 4)
+            length = self.size if i % 2 == 0 else self.size // 2
+            x = self.x + length * math.cos(angle)
+            y = self.y + length * math.sin(angle)
+            points.append((x, y))
+        pygame.draw.polygon(screen, self.color, points)
+
+# Kelas Game
+class Game:
+    def _init_(self):
+        self.running = True
+        self.on_opening_screen = True
+        self.on_click_to_start_screen = False
+        self.game_started = False
+        self.game_over = False
+        self.player = Player()
+        self.stars = [Star() for _ in range(5)]
+        self.flowers = [Flower() for _ in range(3)]
+
+    def start_game(self):
+        self.on_opening_screen = False
+        self.on_click_to_start_screen = False
+        self.game_started = True
+        self.game_over = False
+        self.player = Player()
+        self.stars = [Star() for _ in range(5)]
+        self.flowers = [Flower() for _ in range(3)]
+
+    def opening_screen(self):
+        screen.blit(opening_screen_background, (0, 0))
+
+        title_font = pygame.font.SysFont("Georgia", 80)
+        title_text = title_font.render("STAR CATCHER", True, WHITE)
+
+        instruction_font = pygame.font.SysFont("Georgia", 40)
+        instruction_text = instruction_font.render("WELCOME TO THE GAME", True, WHITE)
+
+        title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+        instruction_rect = instruction_text.get_rect(center=(WIDTH // 2, HEIGHT // 3 + 100))
+
+        screen.blit(title_text, title_rect)
+        screen.blit(instruction_text, instruction_rect)
+
+    def click_to_start_screen(self):
+        screen.blit(opening_screen_background, (0, 0))
+
+        click_font = pygame.font.SysFont("Georgia", 50)
+        click_text = click_font.render("CLICK TO START!", True, WHITE)
+
+        click_rect = click_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+
+        screen.blit(click_text, click_rect)
+
+    def game_over_screen(self):
+        screen.blit(game_over_background, (0, 0))
+
+        game_over_font = pygame.font.SysFont("Georgia", 70)
+        game_over_text = game_over_font.render("GAME OVER!", True, RED)
+
+        final_score_font = pygame.font.SysFont("Georgia", 50)
+        final_score_text = final_score_font.render(f"SCORE : {self.player.score}", True, RED)
+
+        try_again_font = pygame.font.SysFont("Georgia", 40)
+        try_again_text = try_again_font.render("CLICK TO START", True, WHITE)
